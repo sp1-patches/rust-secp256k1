@@ -66,7 +66,7 @@ fn main() {
             .flag("-flto")
             .target("riscv32-unknown-none-elf");
     }
-    // panic!("Panicing to end build");
+    panic!("Panicing to end build");
 
     if cfg!(feature = "lowmemory") {
         base_config.define("ECMULT_WINDOW_SIZE", Some("4")); // A low-enough value to consume negligible memory
