@@ -31,11 +31,14 @@ fn main() {
                // just #define it away.
                .define("printf(...)", Some(""));
 
+    println!("cargo:warning=Above the if statement");
     if env::var("CARGO_CFG_TARGET_ARCH").unwrap() == "riscv32" {
+        println!("cargo:warning=This is within riscv32");
         const DEFAULT_RISCV_GNU_TOOLCHAIN: &str = "/opt/riscv";
         println!("cargo:rerun-if-env-changed=RISCV_GNU_TOOLCHAIN");
-
+        println!("cargo:warning=Above the if statement");
         let riscv_gnu_toolchain_path = env::var("RISCV_GNU_TOOLCHAIN").unwrap_or_else(|_| {
+            println!("cargo:warning=In the unwrap_or_else");
             println!("cargo:warning=Variable RISCV_GNU_TOOLCHAIN unset. Assuming '{DEFAULT_RISCV_GNU_TOOLCHAIN}'");
             println!("cargo:warning=Please make sure to build riscv toolchain:");
             println!("cargo:warning=  git clone https://github.com/riscv-collab/riscv-gnu-toolchain && cd riscv-gnu-toolchain");
@@ -46,7 +49,7 @@ fn main() {
             // if unset, try the default and fail eventually
             DEFAULT_RISCV_GNU_TOOLCHAIN.into()
         });
-
+        println!("cargo:warning=This is in line 52");
         base_config
             .compiler("clang")
             .no_default_flags(true)
@@ -62,6 +65,7 @@ fn main() {
             .flag("-flto")
             .target("riscv32-unknown-none-elf");
     }
+    panic!("Panicing to end build");
 
     if cfg!(feature = "lowmemory") {
         base_config.define("ECMULT_WINDOW_SIZE", Some("4")); // A low-enough value to consume negligible memory
