@@ -50,6 +50,7 @@ fn main() {
             DEFAULT_RISCV_GNU_TOOLCHAIN.into()
         });
         println!("cargo:warning=This is in line 52");
+        println!("cargo:warning={riscv_gnu_toolchain_path}");
         base_config
             .compiler("clang")
             .no_default_flags(true)
