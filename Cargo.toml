@@ -56,7 +56,7 @@ wasm-bindgen-test = "0.3"
 getrandom = { version = "0.2", features = ["js"] }
 
 [target.'cfg(all(target_os = "zkvm", target_vendor = "succinct"))'.dependencies]
-sp1-ecdsa = { path = "/home/adityabisht64/signatures/ecdsa", package = "ecdsa", features = ["verifying", "alloc"] }
+sp1-ecdsa = { git = "https://github.com/sp1-patches/signatures", branch = "patch-ecdsa-v0.16.9", package = "ecdsa", features = ["verifying", "alloc"] }
 k256 = { version = "0.13.3", features = ["ecdsa"] }
 elliptic-curve = { version = "0.13.6", default-features = false, features = ["digest", "sec1"] }
 
