@@ -204,8 +204,8 @@ impl<C: Verification> Secp256k1<C> {
 
                 // Reverse the first 32 bytes (r) and the second 32 bytes (s) of the signature
                 // and concatenate them to get the signature in big-endian format.
-                let mut sig_r_le = sig.0[..32];
-                let mut sig_s_le = sig.0[32..64];
+                let mut sig_r_le = &sig.0[..32];
+                let mut sig_s_le = &sig.0[32..64];
                 sig_r_le.reverse();
                 sig_s_le.reverse();
 
