@@ -204,13 +204,21 @@ impl<C: Verification> Secp256k1<C> {
 
                 // Reverse the first 32 bytes (r) and the second 32 bytes (s) of the signature
                 // and concatenate them to get the signature in big-endian format.
-                let mut rev_sig = sig.0[..32].iter().rev().chain(sig.0[32..64].iter().rev()).cloned().collect::<Vec<u8>>();
+                let mut rev_sig = [0u8; 64];
+                let mut sig_r = sig.0[..32];
+                sig_r.reverse();
+                let mut sig_s = sig.0[32..64];
+                sig_s.reverse();
+                rev_sig[..32].copy_from_slice(&sig_r);
+                rev_sig[32..64].copy_from_slice(&sig_s);
+                
                 let signature = sp1_ecdsa::Signature::<k256::Secp256k1>::from_slice(&rev_sig).unwrap();
 
                 // The recovery ID is the last byte of the signature.
                 let recovery_id = sp1_ecdsa::RecoveryId::from_byte(sig.0[64]).unwrap();
 
-                let verifying_key = sp1_ecdsa::VerifyingKey::recover_from_prehash_secp256k1(prehash, &signature, recovery_id).unwrap().to_sec1_bytes();
+                // msg.0 is the prehash of the message.
+                let verifying_key = sp1_ecdsa::VerifyingKey::recover_from_prehash_secp256k1(&msg.0, &signature, recovery_id).unwrap().to_sec1_bytes();
 
                 return key::PublicKey::from_slice(&verifying_key);
             }
