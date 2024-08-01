@@ -204,15 +204,16 @@ impl<C: Verification> Secp256k1<C> {
 
                 // Reverse the first 32 bytes (r) and the second 32 bytes (s) of the signature
                 // and concatenate them to get the signature in big-endian format.
-                let mut rev_sig = [0u8; 64];
-                let mut sig_r = sig.0[..32];
-                sig_r.reverse();
-                let mut sig_s = sig.0[32..64];
-                sig_s.reverse();
-                rev_sig[..32].copy_from_slice(&sig_r);
-                rev_sig[32..64].copy_from_slice(&sig_s);
-                
-                let signature = sp1_ecdsa::Signature::<k256::Secp256k1>::from_slice(&rev_sig).unwrap();
+                let mut sig_r_le = sig.0[..32];
+                let mut sig_s_le = sig.0[32..64];
+                sig_r_le.reverse();
+                sig_s_le.reverse();
+
+                let mut sig_le_bytes = [0u8; 64];
+                sig_le_bytes[..32].copy_from_slice(&sig_r_le);
+                sig_le_bytes[32..64].copy_from_slice(&sig_s_le);
+
+                let signature = sp1_ecdsa::Signature::<k256::Secp256k1>::from_slice(&sig_le_bytes).unwrap();
 
                 // The recovery ID is the last byte of the signature.
                 let recovery_id = sp1_ecdsa::RecoveryId::from_byte(sig.0[64]).unwrap();
