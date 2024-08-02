@@ -218,10 +218,19 @@ impl<C: Verification> Secp256k1<C> {
                 // The recovery ID is the last byte of the signature.
                 let recovery_id = sp1_ecdsa::RecoveryId::from_byte(sig.0[64]).unwrap();
 
-                // msg.0 is the prehash of the message.
-                let verifying_key = sp1_ecdsa::VerifyingKey::recover_from_prehash_secp256k1(&msg.0, &signature, recovery_id).unwrap().to_sec1_bytes();
 
-                return key::PublicKey::from_slice(&verifying_key);
+                let verifying_key = sp1_ecdsa::VerifyingKey::recover_from_prehash_secp256k1(prehash, &signature, recovery_id).unwrap();
+                let verifying_key_bytes = {
+                    let bytes = verifying_key.to_encoded_point(false).to_bytes();
+                    let mut array = [0u8; 64];
+                    array.copy_from_slice(&bytes[1..65]);
+                    array
+                };
+
+                unsafe {
+                    let k = key::PublicKey(crate::ffi::PublicKey::from_array_unchecked(verifying_key_bytes));
+                    return Ok(k);
+                }
             }
         }
 
