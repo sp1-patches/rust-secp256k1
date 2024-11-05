@@ -2,11 +2,11 @@
 
 //! Structs and functionality related to the ECDSA signature algorithm.
 //!
-#[cfg(all(target_os = "zkvm"))]
+#[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
 use elliptic_curve;
-#[cfg(all(target_os = "zkvm"))]
+#[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
 use k256;
-#[cfg(all(target_os = "zkvm"))]
+#[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
 use sp1_ecdsa;
 
 #[cfg(feature = "recovery")]
