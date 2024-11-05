@@ -207,7 +207,7 @@ impl<C: Verification> Secp256k1<C> {
         sig: &RecoverableSignature,
     ) -> Result<key::PublicKey, Error> {
         cfg_if::cfg_if! {
-            if #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))] {
+            if #[cfg(all(target_os = "zkvm"))] {
                 // `msg.0` contains the message data as a byte array.
                 let prehash: &[u8] = &msg.0;
 
