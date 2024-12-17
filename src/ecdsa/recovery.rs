@@ -224,7 +224,10 @@ impl<C: Verification> Secp256k1<C> {
 
                 // The recovery ID is the last byte of the signature.
                 let recovery_id = sp1_ecdsa::RecoveryId::from_byte(sig.0[64]).unwrap();
-
+                
+                // Internally, `recover_from_prehash` fully consrains the recovery (or failure to
+                // recover) of the public key. If the signature is valid, the public key is
+                // guaranteed to be valid.
                 if let Ok(verifying_key) = sp1_ecdsa::VerifyingKey::recover_from_prehash(prehash, &signature, recovery_id) {
                     let verifying_key_bytes = {
                         // Convert the verifying key to a byte array. The encoded point returned by `to_encoded_point` is in uncompressed format,
@@ -239,6 +242,8 @@ impl<C: Verification> Secp256k1<C> {
                         let k = key::PublicKey(crate::ffi::PublicKey::from_array_unchecked(verifying_key_bytes));
                         return Ok(k);
                     }
+                } else {
+                    return Err(Error::InvalidSignature); 
                 }
             }
         }
