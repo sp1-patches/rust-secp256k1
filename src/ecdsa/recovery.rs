@@ -219,15 +219,15 @@ impl<C: Verification> Secp256k1<C> {
                 // and concatenate them to get the signature in big-endian format.
                 let mut sig_be_bytes = flip_secp256k1_endianness(&sig.0[..64].try_into().unwrap());
 
-                let signature = sp1_ecdsa::Signature::<k256::Secp256k1>::from_slice(&sig_be_bytes).unwrap();
+                let signature = k256::ecdsa::Signature::from_slice(&sig_be_bytes).unwrap();
 
                 // The recovery ID is the last byte of the signature.
-                let recovery_id = sp1_ecdsa::RecoveryId::from_byte(sig.0[64]).unwrap();
+                let recovery_id = k256::ecsda::RecoveryId::from_byte(sig.0[64]).unwrap();
                 
                 // Internally, `recover_from_prehash` fully consrains the recovery (or failure to
                 // recover) of the public key. If the signature is valid, the public key is
                 // guaranteed to be valid.
-                if let Ok(verifying_key) = sp1_ecdsa::VerifyingKey::recover_from_prehash(prehash, &signature, recovery_id) {
+                if let Ok(verifying_key) = k256::ecdsa::VerifyingKey::recover_from_prehash(prehash, &signature, recovery_id) {
                     let verifying_key_bytes = {
                         // Convert the verifying key to a byte array. The encoded point returned by `to_encoded_point` is in uncompressed format,
                         // with the prefix byte (0x04) and two 32-byte coordinates in big-endian format. This needs to be flipped to little-endian

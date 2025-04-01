@@ -59,8 +59,7 @@ getrandom = { version = "0.2", features = ["js"] }
 unexpected_cfgs = { level = "deny", check-cfg = ['cfg(bench)', 'cfg(secp256k1_fuzz)', 'cfg(rust_secp_no_symbol_renaming)'] }
 
 [target.'cfg(all(target_os = "zkvm", target_vendor = "succinct"))'.dependencies]
-sp1-ecdsa = { git = "https://github.com/sp1-patches/signatures", tag = "patch-0.16.9-sp1-4.0.0", package = "ecdsa", features = ["verifying", "alloc"] }
-k256 = { version = "0.13.4", features = ["ecdsa"] }
+k256 = { git = "https://github.com/sp1-patches/elliptic-curves", tag = "patch-k256-13.4-sp1-4.1.0", package = "k256", features = ["ecdsa"] }
 
 [[example]]
 name = "sign_verify_recovery"
