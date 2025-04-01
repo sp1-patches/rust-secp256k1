@@ -12,6 +12,9 @@ use crate::ecdsa::Signature;
 use crate::ffi::recovery as ffi;
 use crate::{key, Error, Message, Secp256k1, Signing, Verification};
 
+#[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+use super::flip_secp256k1_endianness;
+
 /// A tag used for recovering the public key from a compact signature.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Ord, PartialOrd)]
 pub struct RecoveryId(i32);
@@ -182,20 +185,6 @@ impl<C: Signing> Secp256k1<C> {
         let noncedata_ptr = noncedata.as_ptr() as *const super_ffi::types::c_void;
         self.sign_ecdsa_recoverable_with_noncedata_pointer(msg, sk, noncedata_ptr)
     }
-}
-
-/// Takes a 64 byte array and reverses the endian-ness of each 32 byte segment.
-/// Useful for flipping the byte endian-ness of the signature and public key components.
-fn flip_secp256k1_endianness(input: &[u8; 64]) -> [u8; 64] {
-    let mut output = [0u8; 64];
-    for i in 0..2 {
-        let start = i * 32;
-        let end = start + 32;
-        let mut segment: [u8; 32] = input[start..end].try_into().unwrap();
-        segment.reverse();
-        output[start..end].copy_from_slice(&segment);
-    }
-    output
 }
 
 impl<C: Verification> Secp256k1<C> {

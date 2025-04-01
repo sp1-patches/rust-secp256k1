@@ -2,6 +2,7 @@
 
 //! Structs and functionality related to the ECDSA signature algorithm.
 //!
+use cfg_if::cfg_if;
 #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
 use k256;
 
@@ -388,6 +389,27 @@ impl<C: Verification> Secp256k1<C> {
         sig: &Signature,
         pk: &PublicKey,
     ) -> Result<(), Error> {
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))] {
+                // Reverse the first 32 bytes (r) and the second 32 bytes (s) of the signature
+                // and concatenate them to get the signature in big-endian format.
+                let mut sig_be_bytes = flip_secp256k1_endianness(&sig.0[..64].try_into().unwrap());
+                let signature = k256::ecdsa::Signature::from_slice(&sig_be_bytes).unwrap();
+
+                // Reverse the first 32 bytes (x) and the second 32 bytes (y) of the public key
+                // and concatenate them to get the public key in big-endian format.
+                let mut pk_be_bytes = flip_secp256k1_endianness(&pk.0[..64].try_into().unwrap());
+                let public_key = k256::ecdsa::VerifyingKey::from_slice(&pk_be_bytes).unwrap();
+
+                // Verify the signature
+                if public_key.verify_prehash(msg, &signature).is_ok() {
+                    Ok(())
+                } else {
+                    Err(Error::IncorrectSignature)
+                }
+            }
+        }
+
         unsafe {
             if ffi::secp256k1_ecdsa_verify(
                 self.ctx.as_ptr(),
@@ -402,6 +424,21 @@ impl<C: Verification> Secp256k1<C> {
             }
         }
     }
+}
+
+/// Takes a 64 byte array and reverses the endian-ness of each 32 byte segment.
+/// Useful for flipping the byte endian-ness of the signature and public key components.
+#[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+fn flip_secp256k1_endianness(input: &[u8; 64]) -> [u8; 64] {
+    let mut output = [0u8; 64];
+    for i in 0..2 {
+        let start = i * 32;
+        let end = start + 32;
+        let mut segment: [u8; 32] = input[start..end].try_into().unwrap();
+        segment.reverse();
+        output[start..end].copy_from_slice(&segment);
+    }
+    output
 }
 
 pub(crate) fn compact_sig_has_zero_first_bit(sig: &ffi::Signature) -> bool {
