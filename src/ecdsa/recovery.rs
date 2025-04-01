@@ -211,7 +211,7 @@ impl<C: Verification> Secp256k1<C> {
                 let signature = k256::ecdsa::Signature::from_slice(&sig_be_bytes).unwrap();
 
                 // The recovery ID is the last byte of the signature.
-                let recovery_id = k256::ecsda::RecoveryId::from_byte(sig.0[64]).unwrap();
+                let recovery_id = k256::ecdsa::RecoveryId::from_byte(sig.0[64]).unwrap();
                 
                 // Internally, `recover_from_prehash` fully consrains the recovery (or failure to
                 // recover) of the public key. If the signature is valid, the public key is

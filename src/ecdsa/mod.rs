@@ -391,6 +391,8 @@ impl<C: Verification> Secp256k1<C> {
     ) -> Result<(), Error> {
         cfg_if! {
             if #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))] {
+                use k256::ecdsa::signature::hazmat::PrehashVerifier;
+
                 // Reverse the first 32 bytes (r) and the second 32 bytes (s) of the signature
                 // and concatenate them to get the signature in big-endian format.
                 let mut sig_be_bytes = flip_secp256k1_endianness(&sig.0[..64].try_into().unwrap());
@@ -399,13 +401,19 @@ impl<C: Verification> Secp256k1<C> {
                 // Reverse the first 32 bytes (x) and the second 32 bytes (y) of the public key
                 // and concatenate them to get the public key in big-endian format.
                 let mut pk_be_bytes = flip_secp256k1_endianness(&pk.0[..64].try_into().unwrap());
-                let public_key = k256::ecdsa::VerifyingKey::from_slice(&pk_be_bytes).unwrap();
+
+                // Tag the bytes as uncompressed SEC1 encoded public key
+                let mut sec1_bytes = [0u8; 65];
+                sec1_bytes[0] = 0x04;
+                sec1_bytes[1..65].copy_from_slice(&pk_be_bytes);
+
+                let public_key = k256::ecdsa::VerifyingKey::from_sec1_bytes(&sec1_bytes).unwrap();
 
                 // Verify the signature
-                if public_key.verify_prehash(msg, &signature).is_ok() {
-                    Ok(())
+                if public_key.verify_prehash(&msg.0, &signature).is_ok() {
+                    return Ok(());
                 } else {
-                    Err(Error::IncorrectSignature)
+                    return Err(Error::IncorrectSignature);
                 }
             }
         }
