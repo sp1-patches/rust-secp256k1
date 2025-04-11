@@ -395,12 +395,12 @@ impl<C: Verification> Secp256k1<C> {
 
                 // Reverse the first 32 bytes (r) and the second 32 bytes (s) of the signature
                 // and concatenate them to get the signature in big-endian format.
-                let mut sig_be_bytes = flip_secp256k1_endianness(&sig.0[..64].try_into().unwrap());
+                let sig_be_bytes = flip_secp256k1_endianness(&sig.0[..64].try_into().unwrap());
                 let signature = k256::ecdsa::Signature::from_slice(&sig_be_bytes).unwrap();
 
                 // Reverse the first 32 bytes (x) and the second 32 bytes (y) of the public key
                 // and concatenate them to get the public key in big-endian format.
-                let mut pk_be_bytes = flip_secp256k1_endianness(&pk.0[..64].try_into().unwrap());
+                let pk_be_bytes = flip_secp256k1_endianness(&pk.0[..64].try_into().unwrap());
 
                 // Tag the bytes as uncompressed SEC1 encoded public key
                 let mut sec1_bytes = [0u8; 65];
