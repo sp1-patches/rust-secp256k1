@@ -19,7 +19,7 @@ fn main() {
 
     // On riscv32, we need to build C libraries using the riscv-gnu-toolchain and
     // clang for compiling C code.
-    if env::var("CARGO_CFG_TARGET_ARCH").unwrap() == "riscv32" {
+    if env::var("CARGO_CFG_TARGET_ARCH").unwrap() == "riscv64" {
         const DEFAULT_RISCV_GNU_TOOLCHAIN: &str = "/opt/riscv";
         println!("cargo:rerun-if-env-changed=RISCV_GNU_TOOLCHAIN");
 
@@ -38,17 +38,17 @@ fn main() {
         base_config
             .compiler("clang")
             .no_default_flags(true)
-            .flag(format!("--sysroot={riscv_gnu_toolchain_path}/riscv32-unknown-elf"))
+            .flag(format!("--sysroot={riscv_gnu_toolchain_path}/riscv64-unknown-elf"))
             .flag(format!("--gcc-toolchain={riscv_gnu_toolchain_path}"))
-            .flag("--target=riscv32-unknown-none-elf")
-            .flag("-march=rv32im")
-            .flag("-mabi=ilp32")
+            .flag("--target=riscv64-unknown-none-elf")
+            .flag("-march=rv64im")
+            .flag("-mabi=lp64")
             .flag("-mcmodel=medany")
             .flag("-Os")
             .flag("-fdata-sections")
             .flag("-ffunction-sections")
             .flag("-flto")
-            .target("riscv32im-unknown-none-elf");
+            .target("riscv64im-unknown-none-elf");
     }
 
     base_config
