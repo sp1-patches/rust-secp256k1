@@ -56,7 +56,8 @@ pub mod global {
                 }
                 CONTEXT = Some(ctx);
             });
-            unsafe { CONTEXT.as_ref().unwrap() }
+            // Once completes initialization before shared access; CONTEXT is never mutated afterward.
+            unsafe { (&*core::ptr::addr_of!(CONTEXT)).as_ref().unwrap() }
         }
     }
 }
@@ -249,7 +250,7 @@ mod alloc_only {
         ///
         /// * If `rand-std` feature is enabled, context will have been randomized using `thread_rng`.
         /// * If `rand-std` feature is not enabled please consider randomizing the context (see docs
-        /// for `Secp256k1::gen_new()`).
+        ///   for `Secp256k1::gen_new()`).
         pub fn verification_only() -> Secp256k1<VerifyOnly> { Secp256k1::gen_new() }
     }
 

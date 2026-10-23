@@ -38,8 +38,8 @@ fn main() {
         base_config
             .compiler("clang")
             .no_default_flags(true)
-            .flag(&format!("--sysroot={riscv_gnu_toolchain_path}/riscv64-unknown-elf"))
-            .flag(&format!("--gcc-toolchain={riscv_gnu_toolchain_path}"))
+            .flag(format!("--sysroot={riscv_gnu_toolchain_path}/riscv64-unknown-elf").as_str())
+            .flag(format!("--gcc-toolchain={riscv_gnu_toolchain_path}").as_str())
             .flag("--target=riscv64-unknown-none-elf")
             .flag("-march=rv64im")
             .flag("-mabi=lp64")
