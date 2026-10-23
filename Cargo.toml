@@ -11,7 +11,7 @@ description = "Rust wrapper library for Pieter Wuille's `libsecp256k1`. Implemen
 keywords = [ "crypto", "ECDSA", "secp256k1", "libsecp256k1", "bitcoin" ]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.56.1"
+rust-version = "1.85.0"
 
 [package.metadata.docs.rs]
 all-features = true
