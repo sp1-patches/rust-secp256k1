@@ -8,12 +8,11 @@ use core::ptr;
 
 use self::super_ffi::CPtr;
 use super::ffi as super_ffi;
+#[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+use super::flip_secp256k1_endianness;
 use crate::ecdsa::Signature;
 use crate::ffi::recovery as ffi;
 use crate::{key, Error, Message, Secp256k1, Signing, Verification};
-
-#[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
-use super::flip_secp256k1_endianness;
 
 /// A tag used for recovering the public key from a compact signature.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Ord, PartialOrd)]
@@ -200,7 +199,7 @@ impl<C: Verification> Secp256k1<C> {
                 // `msg.0` contains the message data as a byte array.
                 let prehash: &[u8] = &msg.0;
 
-                // `sig` is a 65-byte array containing r (32 bytes), s (32 bytes), and the recovery ID (1 byte). We need to handle the 
+                // `sig` is a 65-byte array containing r (32 bytes), s (32 bytes), and the recovery ID (1 byte). We need to handle the
                 // signature bytes according to their endianness. The signature is in little-endian format, but needs to be processed
                 // in big-endian format for masking by the ecdsa-core library.
 
@@ -212,7 +211,7 @@ impl<C: Verification> Secp256k1<C> {
 
                 // The recovery ID is the last byte of the signature.
                 let recovery_id = k256::ecdsa::RecoveryId::from_byte(sig.0[64]).unwrap();
-                
+
                 // Internally, `recover_from_prehash` fully consrains the recovery (or failure to
                 // recover) of the public key. If the signature is valid, the public key is
                 // guaranteed to be valid.
@@ -231,11 +230,11 @@ impl<C: Verification> Secp256k1<C> {
                         return Ok(k);
                     }
                 } else {
-                    return Err(Error::InvalidSignature); 
+                    return Err(Error::InvalidSignature);
                 }
             }
         }
-        
+
         unsafe {
             let mut pk = super_ffi::PublicKey::new();
             if ffi::secp256k1_ecdsa_recover(
