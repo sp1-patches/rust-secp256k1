@@ -6,7 +6,7 @@
 //!     1. Test that the parts of the code that should work in a no-std enviroment actually work. Note that this is not a comprehensive list.
 //!     2. Test that we don't accidentally import libstd into `secp256k1`.
 //!
-//! The first is tested using the following command `cargo run --release | grep -q "Verified Successfully"`.
+//! The first is tested using the following command `cargo run --release -Zbuild-std=core,alloc --target x86_64-unknown-linux-gnu | grep -q "Verified Successfully"`.
 //! (Making sure that it successfully printed that. i.e. it didn't abort before that).
 //!
 //! The second is tested by the fact that it compiles. if we accidentally link against libstd we should see the following error:
@@ -23,6 +23,7 @@
 //! ```
 //!
 //! Notes:
+//!     * Rebuild core and alloc with panic=abort to avoid linking the prebuilt unwind personality.
 //!     * Requires `panic=abort` and `--release` to not depend on libunwind(which is provided usually by libstd) https://github.com/rust-lang/rust/issues/47493
 //!     * Requires linking with `libc` for calling `printf`.
 //!
@@ -156,10 +157,6 @@ impl Write for Print {
         Ok(())
     }
 }
-
-// Prebuilt core retains unwind metadata, but this binary aborts on every panic.
-#[no_mangle]
-pub extern "C" fn rust_eh_personality() -> ! { unsafe { libc::abort() } }
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
