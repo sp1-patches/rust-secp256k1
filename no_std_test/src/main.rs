@@ -16,7 +16,7 @@
 //! error[E0152]: duplicate lang item found: `eh_personality`.
 //!   --> src/main.rs:37:1
 //!    |
-//! 37 | pub extern "C" fn rust_eh_personality() -> ! { intrinsics::abort() }
+//! 37 | pub extern "C" fn rust_eh_personality() -> ! { unsafe { libc::abort() } }
 //!    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //!    |
 //!    = note: first defined in crate `panic_unwind` (which `std` depends on).
@@ -28,7 +28,6 @@
 //!
 
 #![no_main]
-#![feature(core_intrinsics)]
 #![feature(alloc_error_handler)]
 #![no_std]
 extern crate libc;
@@ -48,7 +47,6 @@ extern crate wee_alloc;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 use core::fmt::{self, Write};
-use core::intrinsics;
 use core::panic::PanicInfo;
 
 use secp256k1::ecdh::{self, SharedSecret};
@@ -150,7 +148,7 @@ impl Write for Print {
         if curr + s.len() > MAX_PRINT {
             unsafe {
                 libc::printf("overflow\n\0".as_ptr() as _);
-                intrinsics::abort();
+                libc::abort();
             }
         }
         self.loc += s.len();
@@ -161,7 +159,7 @@ impl Write for Print {
 
 // Prebuilt core retains unwind metadata, but this binary aborts on every panic.
 #[no_mangle]
-pub extern "C" fn rust_eh_personality() -> ! { intrinsics::abort() }
+pub extern "C" fn rust_eh_personality() -> ! { unsafe { libc::abort() } }
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
@@ -170,11 +168,11 @@ fn panic(info: &PanicInfo) -> ! {
     let mut buf = Print::new();
     write!(&mut buf, "{}", msg).unwrap();
     buf.print();
-    intrinsics::abort()
+    unsafe { libc::abort() }
 }
 
 #[alloc_error_handler]
 fn alloc_error(_layout: Layout) -> ! {
     unsafe { libc::printf("alloc shi1\n\0".as_ptr() as _) };
-    intrinsics::abort()
+    unsafe { libc::abort() }
 }
