@@ -16,7 +16,7 @@
 //! error[E0152]: duplicate lang item found: `eh_personality`.
 //!   --> src/main.rs:37:1
 //!    |
-//! 37 | pub extern "C" fn rust_eh_personality() {}
+//! 37 | pub extern "C" fn rust_eh_personality() -> ! { intrinsics::abort() }
 //!    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //!    |
 //!    = note: first defined in crate `panic_unwind` (which `std` depends on).
@@ -27,13 +27,13 @@
 //!     * Requires linking with `libc` for calling `printf`.
 //!
 
-#![feature(start)]
+#![no_main]
 #![feature(core_intrinsics)]
 #![feature(alloc_error_handler)]
 #![no_std]
 extern crate libc;
 extern crate secp256k1;
-extern crate serde_cbor;
+extern crate postcard;
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -54,12 +54,8 @@ use core::panic::PanicInfo;
 use secp256k1::ecdh::{self, SharedSecret};
 use secp256k1::ffi::types::AlignedType;
 use secp256k1::rand::{self, RngCore};
-use secp256k1::serde::Serialize;
 use secp256k1::*;
 
-use serde_cbor::de;
-use serde_cbor::ser::SliceWrite;
-use serde_cbor::Serializer;
 
 struct FakeRng;
 impl RngCore for FakeRng {
@@ -80,8 +76,8 @@ impl RngCore for FakeRng {
     }
 }
 
-#[start]
-fn start(_argc: isize, _argv: *const *const u8) -> isize {
+#[no_mangle]
+pub extern "C" fn main(_argc: libc::c_int, _argv: *const *const libc::c_char) -> libc::c_int {
     let mut buf = [AlignedType::zeroed(); 70_000];
     let size = Secp256k1::preallocate_size();
     unsafe { libc::printf("needed size: %d\n\0".as_ptr() as _, size) };
@@ -102,12 +98,9 @@ fn start(_argc: isize, _argv: *const *const u8) -> isize {
     let new_rec_sig = ecdsa::RecoverableSignature::from_compact(&data, rec_id).unwrap();
     assert_eq!(rec_sig, new_rec_sig);
 
-    let mut cbor_ser = [0u8; 100];
-    let writer = SliceWrite::new(&mut cbor_ser[..]);
-    let mut ser = Serializer::new(writer);
-    sig.serialize(&mut ser).unwrap();
-    let size = ser.into_inner().bytes_written();
-    let new_sig: ecdsa::Signature = de::from_mut_slice(&mut cbor_ser[..size]).unwrap();
+    let mut encoded = [0u8; 100];
+    let serialized = postcard::to_slice(&sig, &mut encoded).unwrap();
+    let new_sig: ecdsa::Signature = postcard::from_bytes(serialized).unwrap();
     assert_eq!(sig, new_sig);
 
     let _ = SharedSecret::new(&public_key, &secret_key);
@@ -165,6 +158,10 @@ impl Write for Print {
         Ok(())
     }
 }
+
+// Prebuilt core retains unwind metadata, but this binary aborts on every panic.
+#[no_mangle]
+pub extern "C" fn rust_eh_personality() -> ! { intrinsics::abort() }
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
