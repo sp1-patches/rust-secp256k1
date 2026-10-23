@@ -58,7 +58,8 @@ pub mod global {
                 }
                 CONTEXT = Some(ctx);
             });
-            unsafe { CONTEXT.as_ref().unwrap() }
+            // Once completes initialization before shared access; CONTEXT is never mutated afterward.
+            unsafe { (&*core::ptr::addr_of!(CONTEXT)).as_ref().unwrap() }
         }
     }
 }
