@@ -13,7 +13,7 @@ if [ "$DO_WASM" = true ]; then
     clang --version
     CARGO_TARGET_DIR=wasm cargo install --force wasm-pack
     printf '\n[lib]\ncrate-type = ["cdylib", "rlib"]\n' >> Cargo.toml
-    CC=clang wasm-pack build
+    CC=clang cargo build --target wasm32-unknown-unknown --release
     CC=clang wasm-pack test --node
 
     exit 0
