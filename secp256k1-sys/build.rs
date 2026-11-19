@@ -17,9 +17,8 @@ fn main() {
     // Actual build
     let mut base_config = cc::Build::new();
 
-    // On riscv32, we need to build C libraries using the riscv-gnu-toolchain and
-    // clang for compiling C code.
-    if env::var("CARGO_CFG_TARGET_ARCH").unwrap() == "riscv64" {
+    // The zkVM needs bare-metal C flags; Linux RISC-V uses the platform toolchain.
+    if env::var("CARGO_CFG_TARGET_OS").unwrap() == "zkvm" {
         const DEFAULT_RISCV_GNU_TOOLCHAIN: &str = "/opt/riscv";
         println!("cargo:rerun-if-env-changed=RISCV_GNU_TOOLCHAIN");
 
