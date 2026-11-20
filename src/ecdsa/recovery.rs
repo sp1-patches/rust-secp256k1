@@ -215,6 +215,19 @@ impl<C: Verification> Secp256k1<C> {
                 // The recovery ID is the last byte of the signature.
                 let recovery_id = k256::ecdsa::RecoveryId::from_byte(sig.0[64]).unwrap();
 
+                // libsecp256k1 accepts high-S signatures during recovery. k256 requires
+                // low-S: negating s also negates R, so flip only the Y-parity bit.
+                let (signature, recovery_id) = match signature.normalize_s() {
+                    Some(normalized) => (
+                        normalized,
+                        k256::ecdsa::RecoveryId::new(
+                            !recovery_id.is_y_odd(),
+                            recovery_id.is_x_reduced(),
+                        ),
+                    ),
+                    None => (signature, recovery_id),
+                };
+
                 // Internally, `recover_from_prehash` fully consrains the recovery (or failure to
                 // recover) of the public key. If the signature is valid, the public key is
                 // guaranteed to be valid.
